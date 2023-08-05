@@ -1,0 +1,5 @@
+database:
+  postgres: "postgresql://postgres:mysecretpassword@localhost:5432/player"
+  redis:
+    address: "localhost:6379"
+    password: ""
