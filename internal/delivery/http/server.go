@@ -21,9 +21,10 @@ type Server struct {
 }
 
 type PlayerHandler interface {
+	SignUp(c echo.Context) error
 }
 
-
+// create server
 func New(playerHandler PlayerHandler, opts ...Option) *Server {
 	server := Server{
 		e:             *echo.New(),
@@ -36,7 +37,7 @@ func New(playerHandler PlayerHandler, opts ...Option) *Server {
 	return &server
 }
 
-// Start serverd
+// start server
 func (s *Server) Serve() error {
 	var err error
 	//start

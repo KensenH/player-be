@@ -1,11 +1,11 @@
 package response
 
 type Response struct {
-	Data   interface{} `json:"data"`
-	Errors []Error     `json:"errors"`
+	Data   interface{} `json:"data,omitempty"`
+	Errors []Error     `json:"errors,omitempty"`
 }
 
 type Error struct {
-	Title   string
+	Params  string
 	Message string
 }

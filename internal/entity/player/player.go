@@ -40,3 +40,9 @@ type PlayerSignUpForm struct {
 	LastName  string `json:"last_name"`
 	Email     string `json:"email" validate:"required,email"`
 }
+
+type PlayerSignUpSuccess struct {
+	PlayerID uint      `json:"player_id"`
+	Username string    `json:"username"`
+	CreateAt time.Time `json:"created_at"`
+}
