@@ -7,12 +7,13 @@ import (
 )
 
 type Player struct {
-	ID             uint           `gorm:"primaryKey"`
-	Username       string         `gorm:"type:varchar(15);uniqueIndex;not null"`
-	Password       string         `gorm:"type:varchar(255);not null"`
-	FirstName      string         `gorm:"type:varchar(255);not null"`
-	LastName       string         `gorm:"type:varchar(255)"`
-	Email          string         `gorm:"uniqueIndex;not null"`
+	gorm.Model
+	ID             uint           `json:"player_id" gorm:"primaryKey"`
+	Username       string         `json:"username" gorm:"type:varchar(15);uniqueIndex;not null"`
+	Password       string         `json:"password" gorm:"type:varchar(255);not null"`
+	FirstName      string         `json:"first_name" gorm:"type:varchar(255);not null"`
+	LastName       string         `json:"last_name" gorm:"type:varchar(255)"`
+	Email          string         `json:"email" gorm:"uniqueIndex;not null"`
 	InGameCurrency int64          `gorm:"default:0"`
 	SignUp         time.Time      `gorm:"not null"`
 	BankAccount    []BankAccount  `gorm:"foreignKey:PlayerID;references:ID"`
@@ -45,4 +46,13 @@ type PlayerSignUpSuccess struct {
 	PlayerID uint      `json:"player_id"`
 	Username string    `json:"username"`
 	CreateAt time.Time `json:"created_at"`
+}
+
+type PlayerUserPass struct {
+	Username string
+	Password string
+}
+
+type PlayerID struct {
+	ID uint
 }

@@ -2,11 +2,13 @@ package player
 
 import (
 	"context"
+	"encoding/json"
 
 	"gorm.io/gorm"
 
 	e "player-be/internal/entity/player"
 
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -16,13 +18,13 @@ type PlayerData struct {
 	DB *gorm.DB `validate:"required"`
 }
 
-func New(db *gorm.DB, opts ...Option) PlayerData {
-	playerData := PlayerData{
+func New(db *gorm.DB, opts ...Option) *PlayerData {
+	playerData := &PlayerData{
 		DB: db,
 	}
 
 	for _, opt := range opts {
-		opt(&playerData)
+		opt(playerData)
 	}
 
 	err := db.AutoMigrate(&e.Player{}, &e.BankAccount{}, &e.TopUpHistory{})
@@ -34,28 +36,82 @@ func New(db *gorm.DB, opts ...Option) PlayerData {
 }
 
 // register new player to db
-func (d *PlayerData) AddNewPlayer(ctx context.Context) error {
-	var err error
+func (d *PlayerData) AddNewPlayer(ctx context.Context, newUser e.Player) (e.PlayerSignUpSuccess, error) {
+	var (
+		err  error
+		resp e.PlayerSignUpSuccess
+	)
 
-	return err
+	result := d.DB.Create(&newUser)
+	if result.Error != nil {
+		return resp, errors.Wrap(err, "[DATA][AddNewPlayer] ")
+	}
+
+	//convert to e.Player to e.PlayerSignUpSuccess struct
+	playerJson, err := json.Marshal(newUser)
+	if err != nil {
+		return resp, errors.Wrap(err, "[DATA][AddNewPlayer] ")
+	}
+
+	err = json.Unmarshal(playerJson, &resp)
+	if err != nil {
+		return resp, errors.Wrap(err, "[DATA][AddNewPlayer] ")
+	}
+
+	return resp, err
 }
 
 // username exist in db
-func (d *PlayerData) UsernameExist(ctx context.Context) (bool, error) {
+func (d *PlayerData) UsernameExist(ctx context.Context, username string) bool {
 	var (
-		err   error
-		exist bool
+		player = e.Player{
+			Username: username,
+		}
+
+		dbResult e.PlayerID
 	)
 
-	return exist, err
+	result := d.DB.Where(&player).First(&dbResult)
+	if result.Error != nil {
+		return false
+	}
+
+	return true
 }
 
 // email already registered in db
-func (d *PlayerData) EmailRegistered(ctx context.Context) (bool, error) {
+func (d *PlayerData) EmailRegistered(ctx context.Context, email string) bool {
 	var (
-		err        error
-		registered bool
+		player = e.Player{
+			Email: email,
+		}
+
+		dbResult e.PlayerID
 	)
 
-	return registered, err
+	result := d.DB.Where(&player).First(&dbResult)
+	if result.Error != nil {
+		return false
+	}
+
+	return true
+}
+
+// get user's hashed password from db
+func (d *PlayerData) GetHashedPassword(ctx context.Context, username string) (e.PlayerUserPass, error) {
+	var (
+		err  error
+		resp e.PlayerUserPass
+
+		player = e.Player{
+			Username: username,
+		}
+	)
+
+	result := d.DB.Where(&player).First(&resp)
+	if result.Error != nil {
+		return resp, errors.Wrap(err, "[DATA][GetHashedPassword]")
+	}
+
+	return resp, err
 }
