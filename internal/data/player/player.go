@@ -4,11 +4,12 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 
+	inerr "player-be/internal/entity/errors"
 	e "player-be/internal/entity/player"
 
-	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -71,7 +72,7 @@ func (d *PlayerData) UsernameExist(ctx context.Context, username string) bool {
 		dbResult e.PlayerID
 	)
 
-	result := d.DB.Where(&player).First(&dbResult)
+	result := d.DB.Model(&player).Where(&player).First(&dbResult)
 	if result.Error != nil {
 		return false
 	}
@@ -89,7 +90,7 @@ func (d *PlayerData) EmailRegistered(ctx context.Context, email string) bool {
 		dbResult e.PlayerID
 	)
 
-	result := d.DB.Where(&player).First(&dbResult)
+	result := d.DB.Model(&player).Where(&player).First(&dbResult)
 	if result.Error != nil {
 		return false
 	}
@@ -108,9 +109,12 @@ func (d *PlayerData) GetHashedPassword(ctx context.Context, username string) (e.
 		}
 	)
 
-	result := d.DB.Where(&player).First(&resp)
+	result := d.DB.Model(&player).Where(&player).First(&resp)
 	if result.Error != nil {
-		return resp, errors.Wrap(err, "[DATA][GetHashedPassword]")
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			return resp, inerr.ErrIncorrectUsernamePassword
+		}
+		return resp, errors.Wrap(result.Error, "[DATA][GetHashedPassword]")
 	}
 
 	return resp, err

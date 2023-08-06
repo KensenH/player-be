@@ -22,6 +22,7 @@ type Server struct {
 
 type PlayerHandler interface {
 	SignUp(c echo.Context) error
+	SignIn(c echo.Context) error
 }
 
 // create server

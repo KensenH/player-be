@@ -3,10 +3,15 @@ package player
 import (
 	"context"
 	"encoding/json"
+	"time"
+
+	"github.com/golang-jwt/jwt/v5"
+	"github.com/pkg/errors"
+	"gorm.io/gorm"
+
+	inerr "player-be/internal/entity/errors"
 	e "player-be/internal/entity/player"
 	pwd "player-be/internal/pkg/password"
-
-	"github.com/pkg/errors"
 )
 
 type Option func(*PlayerService)
@@ -44,12 +49,12 @@ func (s *PlayerService) SignUp(ctx context.Context, playerForm e.PlayerSignUpFor
 
 	//check username
 	if exist := s.Data.UsernameExist(ctx, playerForm.Username); exist {
-		return resp, errors.New("username is already taken")
+		return resp, inerr.ErrUsernameIsTaken
 	}
 
 	//check email
 	if exist := s.Data.EmailRegistered(ctx, playerForm.Email); exist {
-		return resp, errors.New("email is already used by another account")
+		return resp, inerr.ErrEmailIsTaken
 	}
 
 	//hash password
@@ -64,12 +69,12 @@ func (s *PlayerService) SignUp(ctx context.Context, playerForm e.PlayerSignUpFor
 	//convert from form to player struct
 	playerFormJson, err := json.Marshal(playerForm)
 	if err != nil {
-		return resp, errors.Wrap(err, "error while mashaling data")
+		return resp, inerr.ErrMarshal
 	}
 
 	err = json.Unmarshal(playerFormJson, &newPlayer)
 	if err != nil {
-		return resp, errors.Wrap(err, "error while unmashaling data")
+		return resp, inerr.ErrUnMarshal
 	}
 
 	//add new player to db
@@ -79,4 +84,35 @@ func (s *PlayerService) SignUp(ctx context.Context, playerForm e.PlayerSignUpFor
 	}
 
 	return resp, err
+}
+
+func (s *PlayerService) SignIn(ctx context.Context, expirationTime time.Time, playerForm e.PlayerUserPass) (tokenStr string, err error) {
+
+	stored, err := s.Data.GetHashedPassword(ctx, playerForm.Username)
+	if err != nil {
+		if errors.Unwrap(err) == gorm.ErrRecordNotFound {
+			return tokenStr, inerr.ErrIncorrectUsernamePassword
+		}
+		return tokenStr, errors.Wrap(err, "error fetching player data")
+	}
+
+	if !pwd.CheckPasswordHash(playerForm.Password, stored.Password) && stored.Username == playerForm.Username {
+		return tokenStr, inerr.ErrIncorrectUsernamePassword
+	}
+
+	claims := &e.JwtClaims{
+		Username: stored.Username,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	tokenStr, err = token.SignedString([]byte("mysecretjwtkey"))
+	if err != nil {
+		return tokenStr, errors.Wrap(err, "error while creating jwt")
+	}
+
+	return tokenStr, err
 }

@@ -32,7 +32,7 @@ func HTTP() error {
 
 	db, err := gorm.Open(postgres.Open(cfg.Database.Postgres), &gorm.Config{
 		PrepareStmt: true,
-		Logger:      logger.Default.LogMode(logger.Silent),
+		Logger:      logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {
 		return errors.Wrap(err, "db open")

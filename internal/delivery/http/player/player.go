@@ -2,12 +2,16 @@ package player
 
 import (
 	"context"
+	"net/http"
+	"time"
 
 	"github.com/labstack/echo/v4"
 
 	"github.com/go-playground/validator/v10"
 
+	inerr "player-be/internal/entity/errors"
 	playerEntity "player-be/internal/entity/player"
+	"player-be/internal/entity/response"
 )
 
 type Option func(h *PlayerHandler)
@@ -19,6 +23,7 @@ type PlayerHandler struct {
 
 type PlayerService interface {
 	SignUp(ctx context.Context, playerForm playerEntity.PlayerSignUpForm) (playerEntity.PlayerSignUpSuccess, error)
+	SignIn(ctx context.Context, expirationTime time.Time, playerForm playerEntity.PlayerUserPass) (tokenStr string, err error)
 }
 
 // new player handler
@@ -59,6 +64,7 @@ func (h PlayerHandler) SignUp(c echo.Context) error {
 		return echo.NewHTTPError(501, err.Error())
 	}
 
+	//validate form
 	err = h.validator.Struct(form)
 	if err != nil {
 		return echo.NewHTTPError(400, err.Error())
@@ -70,4 +76,57 @@ func (h PlayerHandler) SignUp(c echo.Context) error {
 	}
 
 	return c.JSON(200, resp)
+}
+
+// signin,
+// api/v1/player/signin
+func (h PlayerHandler) SignIn(c echo.Context) error {
+	var (
+		err  error
+		form playerEntity.PlayerUserPass
+	)
+
+	err = c.Bind(&form)
+	if err != nil {
+		return echo.NewHTTPError(501, err.Error())
+	}
+
+	err = h.validator.Struct(form)
+	if err != nil {
+		return echo.NewHTTPError(400, err.Error())
+	}
+
+	expirationTime := time.Now().Add(24 * time.Hour)
+	tokenStr, err := h.Service.SignIn(c.Request().Context(), expirationTime, form)
+	if err != nil {
+		if err == inerr.ErrIncorrectUsernamePassword {
+			return echo.NewHTTPError(401, err.Error())
+		}
+
+		return echo.NewHTTPError(501, err.Error())
+	}
+
+	cookie := &http.Cookie{
+		Name:    "token",
+		Value:   tokenStr,
+		Expires: expirationTime,
+	}
+
+	c.SetCookie(cookie)
+
+	return c.JSON(200, response.Response{
+		Data: map[string]string{
+			"jwt_token": tokenStr,
+		},
+	})
+}
+
+// signout,
+// api/v1/player/signout
+func (h PlayerHandler) SignOut(c echo.Context) error {
+	var (
+		err error
+	)
+
+	return err
 }

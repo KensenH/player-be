@@ -4,6 +4,8 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+
+	"github.com/golang-jwt/jwt/v5"
 )
 
 type Player struct {
@@ -49,8 +51,13 @@ type PlayerSignUpSuccess struct {
 }
 
 type PlayerUserPass struct {
-	Username string
-	Password string
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}
+
+type JwtClaims struct {
+	Username string `json:"username"`
+	jwt.RegisteredClaims
 }
 
 type PlayerID struct {
