@@ -12,7 +12,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
 
-	// "github.com/redis/go-redis/v9"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -24,11 +24,11 @@ func HTTP() error {
 
 	v := validator.New()
 
-	// rdb := redis.NewClient(&redis.Options{
-	// 	Addr:     cfg.Database.Redis.Address,
-	// 	Password: cfg.Database.Redis.Password,
-	// 	DB:       0,
-	// })
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     cfg.Database.Redis.Address,
+		Password: cfg.Database.Redis.Password,
+		DB:       0,
+	})
 
 	db, err := gorm.Open(postgres.Open(cfg.Database.Postgres), &gorm.Config{
 		PrepareStmt: true,
@@ -38,12 +38,7 @@ func HTTP() error {
 		return errors.Wrap(err, "db open")
 	}
 
-	err = db.AutoMigrate()
-	if err != nil {
-		return errors.Wrap(err, "db migrate")
-	}
-
-	playerD := playerData.New(db)
+	playerD := playerData.New(db, rdb)
 	playerS := playerService.New(playerD)
 
 	playerH := playerHandler.New(

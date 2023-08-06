@@ -3,8 +3,11 @@ package player
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"time"
 
 	"github.com/pkg/errors"
+	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 
 	inerr "player-be/internal/entity/errors"
@@ -16,12 +19,14 @@ import (
 type Option func(*PlayerData)
 
 type PlayerData struct {
-	DB *gorm.DB `validate:"required"`
+	DB    *gorm.DB
+	Redis *redis.Client
 }
 
-func New(db *gorm.DB, opts ...Option) *PlayerData {
+func New(db *gorm.DB, redis *redis.Client, opts ...Option) *PlayerData {
 	playerData := &PlayerData{
-		DB: db,
+		DB:    db,
+		Redis: redis,
 	}
 
 	for _, opt := range opts {
@@ -118,4 +123,38 @@ func (d *PlayerData) GetHashedPassword(ctx context.Context, username string) (e.
 	}
 
 	return resp, err
+}
+
+// store invalid tokenID to redis
+func (d *PlayerData) InvalidateToken(ctx context.Context, tokenID string, expiredTime time.Time) error {
+	var (
+		err error
+	)
+
+	err = d.Redis.Set(ctx, fmt.Sprintf("player:token:expired:%s", tokenID), expiredTime.String, expiredTime.Sub(time.Now())).Err()
+	if err != nil {
+		return errors.Wrap(err, "error while registering invalid token")
+	}
+
+	return err
+}
+
+// validate wether token is valid or not from redis
+func (d *PlayerData) TokenIsValid(ctx context.Context, tokenID string) (bool, error) {
+	var (
+		err error
+	)
+
+	key := fmt.Sprintf("player:token:expired:%s", tokenID)
+
+	_, err = d.Redis.Get(ctx, key).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return true, err
+		}
+
+		return true, errors.Wrap(err, "error while registering invalid token")
+	}
+
+	return false, err
 }

@@ -25,6 +25,8 @@ type PlayerData interface {
 	UsernameExist(ctx context.Context, username string) bool
 	EmailRegistered(ctx context.Context, email string) bool
 	GetHashedPassword(ctx context.Context, username string) (e.PlayerUserPass, error)
+	InvalidateToken(ctx context.Context, tokenID string, expiredTime time.Time) error
+	TokenIsValid(ctx context.Context, tokenID string) (bool, error)
 }
 
 func New(playerData PlayerData, opts ...Option) *PlayerService {
@@ -87,7 +89,6 @@ func (s *PlayerService) SignUp(ctx context.Context, playerForm e.PlayerSignUpFor
 }
 
 func (s *PlayerService) SignIn(ctx context.Context, expirationTime time.Time, playerForm e.PlayerUserPass) (tokenStr string, err error) {
-
 	stored, err := s.Data.GetHashedPassword(ctx, playerForm.Username)
 	if err != nil {
 		if errors.Unwrap(err) == gorm.ErrRecordNotFound {
@@ -115,4 +116,57 @@ func (s *PlayerService) SignIn(ctx context.Context, expirationTime time.Time, pl
 	}
 
 	return tokenStr, err
+}
+
+func (s *PlayerService) SignOut(ctx context.Context, tokenStr string) error {
+	var (
+		err error
+	)
+
+	claims := e.JwtClaims{}
+	token, err := jwt.ParseWithClaims(tokenStr, &claims, func(token *jwt.Token) (interface{}, error) {
+		return "mysecretjwtkey", nil
+	})
+	if err != nil {
+		return errors.Wrap(err, "error while parsing jwt token")
+	}
+
+	valid, err := s.Data.TokenIsValid(ctx, claims.ID)
+	if err != nil {
+		return errors.Wrap(err, "error validating token")
+	}
+
+	if valid && token.Valid {
+		err = s.Data.InvalidateToken(ctx, claims.ID, claims.ExpiresAt.Time)
+		if err != nil {
+			return errors.Wrap(err, "error invalidating token")
+		}
+	}
+
+	return err
+}
+
+func (s *PlayerService) JWTTokenValid(ctx context.Context, tokenStr string) (bool, error) {
+	var (
+		err    error
+		claims = e.JwtClaims{}
+	)
+
+	token, err := jwt.ParseWithClaims(tokenStr, &claims, func(token *jwt.Token) (interface{}, error) {
+		return "mysecretjwtkey", nil
+	})
+	if err != nil {
+		return false, errors.Wrap(err, "error while parsing jwt token")
+	}
+
+	valid, err := s.Data.TokenIsValid(ctx, claims.ID)
+	if err != nil {
+		return false, errors.Wrap(err, "error validating token")
+	}
+
+	if valid && token.Valid {
+		return true, err
+	}
+
+	return false, err
 }

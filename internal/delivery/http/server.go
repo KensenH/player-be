@@ -23,6 +23,8 @@ type Server struct {
 type PlayerHandler interface {
 	SignUp(c echo.Context) error
 	SignIn(c echo.Context) error
+	SignOut(c echo.Context) error
+	JwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc
 }
 
 // create server

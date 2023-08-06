@@ -11,6 +11,7 @@ import (
 
 	inerr "player-be/internal/entity/errors"
 	playerEntity "player-be/internal/entity/player"
+
 	"player-be/internal/entity/response"
 )
 
@@ -24,6 +25,8 @@ type PlayerHandler struct {
 type PlayerService interface {
 	SignUp(ctx context.Context, playerForm playerEntity.PlayerSignUpForm) (playerEntity.PlayerSignUpSuccess, error)
 	SignIn(ctx context.Context, expirationTime time.Time, playerForm playerEntity.PlayerUserPass) (tokenStr string, err error)
+	SignOut(ctx context.Context, tokenStr string) error
+	JWTTokenValid(ctx context.Context, tokenStr string) (bool, error)
 }
 
 // new player handler
@@ -86,17 +89,21 @@ func (h PlayerHandler) SignIn(c echo.Context) error {
 		form playerEntity.PlayerUserPass
 	)
 
+	//bind body
 	err = c.Bind(&form)
 	if err != nil {
 		return echo.NewHTTPError(501, err.Error())
 	}
 
+	//validate form
 	err = h.validator.Struct(form)
 	if err != nil {
 		return echo.NewHTTPError(400, err.Error())
 	}
 
+	//jwt TTL
 	expirationTime := time.Now().Add(24 * time.Hour)
+
 	tokenStr, err := h.Service.SignIn(c.Request().Context(), expirationTime, form)
 	if err != nil {
 		if err == inerr.ErrIncorrectUsernamePassword {
@@ -106,12 +113,14 @@ func (h PlayerHandler) SignIn(c echo.Context) error {
 		return echo.NewHTTPError(501, err.Error())
 	}
 
+	//create cookie
 	cookie := &http.Cookie{
 		Name:    "token",
 		Value:   tokenStr,
 		Expires: expirationTime,
 	}
 
+	//set cookie
 	c.SetCookie(cookie)
 
 	return c.JSON(200, response.Response{
@@ -126,7 +135,22 @@ func (h PlayerHandler) SignIn(c echo.Context) error {
 func (h PlayerHandler) SignOut(c echo.Context) error {
 	var (
 		err error
+		// query authEntity.Auth
 	)
 
-	return err
+	cookie, err := c.Cookie("token")
+	if err != nil {
+		return echo.NewHTTPError(501, err)
+	}
+
+	cookie = &http.Cookie{
+		Name:   "token",
+		Value:  "",
+		MaxAge: -1,
+	}
+	c.SetCookie(cookie)
+
+	return c.JSON(200, response.Response{
+		Data: "OK",
+	})
 }
