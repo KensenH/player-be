@@ -17,7 +17,8 @@ import (
 type Option func(*PlayerService)
 
 type PlayerService struct {
-	Data PlayerData
+	Data    PlayerData
+	JwtTool JwtTool
 }
 
 type PlayerData interface {
@@ -29,9 +30,15 @@ type PlayerData interface {
 	TokenIsValid(ctx context.Context, tokenID string) (bool, error)
 }
 
-func New(playerData PlayerData, opts ...Option) *PlayerService {
+type JwtTool interface {
+	CreateJWT(username string, expirationTime time.Time) (string, error)
+	ParseJWT(tokenStr string) (token *jwt.Token, claimsID string, err error)
+}
+
+func New(playerData PlayerData, jwtTool JwtTool, opts ...Option) *PlayerService {
 	playerService := &PlayerService{
-		Data: playerData,
+		Data:    playerData,
+		JwtTool: jwtTool,
 	}
 
 	for _, opt := range opts {
@@ -101,18 +108,9 @@ func (s *PlayerService) SignIn(ctx context.Context, expirationTime time.Time, pl
 		return tokenStr, inerr.ErrIncorrectUsernamePassword
 	}
 
-	claims := &e.JwtClaims{
-		Username: stored.Username,
-		RegisteredClaims: jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(expirationTime),
-		},
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-
-	tokenStr, err = token.SignedString([]byte("mysecretjwtkey"))
+	tokenStr, err = s.JwtTool.CreateJWT(stored.Username, expirationTime)
 	if err != nil {
-		return tokenStr, errors.Wrap(err, "error while creating jwt")
+		return tokenStr, errors.Wrap(err, "error while creating jwt token")
 	}
 
 	return tokenStr, err
@@ -123,21 +121,23 @@ func (s *PlayerService) SignOut(ctx context.Context, tokenStr string) error {
 		err error
 	)
 
-	claims := e.JwtClaims{}
-	token, err := jwt.ParseWithClaims(tokenStr, &claims, func(token *jwt.Token) (interface{}, error) {
-		return "mysecretjwtkey", nil
-	})
+	token, claimsID, err := s.JwtTool.ParseJWT(tokenStr)
 	if err != nil {
 		return errors.Wrap(err, "error while parsing jwt token")
 	}
 
-	valid, err := s.Data.TokenIsValid(ctx, claims.ID)
+	expirationTime, err := token.Claims.GetExpirationTime()
+	if err != nil {
+		return errors.Wrap(err, "error while fetching jwt expire time")
+	}
+
+	valid, err := s.Data.TokenIsValid(ctx, claimsID)
 	if err != nil {
 		return errors.Wrap(err, "error validating token")
 	}
 
 	if valid && token.Valid {
-		err = s.Data.InvalidateToken(ctx, claims.ID, claims.ExpiresAt.Time)
+		err = s.Data.InvalidateToken(ctx, claimsID, expirationTime.Time)
 		if err != nil {
 			return errors.Wrap(err, "error invalidating token")
 		}
@@ -148,24 +148,21 @@ func (s *PlayerService) SignOut(ctx context.Context, tokenStr string) error {
 
 func (s *PlayerService) JWTTokenValid(ctx context.Context, tokenStr string) (bool, error) {
 	var (
-		err    error
-		claims = e.JwtClaims{}
+		err error
 	)
 
-	token, err := jwt.ParseWithClaims(tokenStr, &claims, func(token *jwt.Token) (interface{}, error) {
-		return "mysecretjwtkey", nil
-	})
+	token, claimsID, err := s.JwtTool.ParseJWT(tokenStr)
 	if err != nil {
 		return false, errors.Wrap(err, "error while parsing jwt token")
 	}
 
-	valid, err := s.Data.TokenIsValid(ctx, claims.ID)
+	valid, err := s.Data.TokenIsValid(ctx, claimsID)
 	if err != nil {
 		return false, errors.Wrap(err, "error validating token")
 	}
 
 	if valid && token.Valid {
-		return true, err
+		return true, nil
 	}
 
 	return false, err

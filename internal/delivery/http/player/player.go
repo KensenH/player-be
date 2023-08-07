@@ -3,6 +3,7 @@ package player
 import (
 	"context"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -135,14 +136,26 @@ func (h PlayerHandler) SignIn(c echo.Context) error {
 func (h PlayerHandler) SignOut(c echo.Context) error {
 	var (
 		err error
-		// query authEntity.Auth
 	)
 
+	//get token
 	cookie, err := c.Cookie("token")
+	if err != nil {
+		//no token found
+		if strings.Contains(err.Error(), "named cookie not present") {
+			return c.JSON(200, response.Response{Data: "OK"})
+		}
+
+		return echo.NewHTTPError(501, err)
+	}
+
+	//check to token from claims and redis
+	err = h.Service.SignOut(c.Request().Context(), cookie.Value)
 	if err != nil {
 		return echo.NewHTTPError(501, err)
 	}
 
+	//delete token from client's side
 	cookie = &http.Cookie{
 		Name:   "token",
 		Value:  "",
@@ -150,7 +163,5 @@ func (h PlayerHandler) SignOut(c echo.Context) error {
 	}
 	c.SetCookie(cookie)
 
-	return c.JSON(200, response.Response{
-		Data: "OK",
-	})
+	return c.JSON(200, response.Response{Data: "OK"})
 }

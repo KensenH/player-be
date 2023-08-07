@@ -12,8 +12,9 @@ type Config struct {
 }
 
 type Database struct {
-	Postgres string `yaml:"postgres"`
-	Redis    Redis
+	Postgres  string `yaml:"postgres"`
+	Redis     Redis  `yaml:"redis"`
+	JWTSecret string `yaml:"jwt_secret"`
 }
 
 type Redis struct {

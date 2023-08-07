@@ -3,3 +3,4 @@ database:
   redis:
     address: "localhost:6379"
     password: ""
+jwt_secret: "jMTpQCKTaXPwuJbxUMhuQhFQMwnWROzOakllnQhydMqgHXlcqnDxMazYObsv"

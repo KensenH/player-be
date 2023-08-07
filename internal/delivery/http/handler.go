@@ -29,12 +29,13 @@ func (s *Server) handler() {
 
 	playerBe := s.e.Group("/player-be")
 	apiV1 := playerBe.Group("/api/v1")
-	
+
 	//player
 	playerV1 := apiV1.Group("/player")
 	playerV1.POST("/signup", s.PlayerHandler.SignUp)
 	playerV1.POST("/signin", s.PlayerHandler.SignIn)
 	playerV1.GET("/signout", s.PlayerHandler.SignOut)
+	playerV1.GET("/test", defaultRoute)
 
 }
 

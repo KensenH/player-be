@@ -9,6 +9,8 @@ import (
 
 	s "player-be/internal/delivery/http"
 
+	"player-be/internal/jwt"
+
 	"github.com/go-playground/validator/v10"
 	"github.com/pkg/errors"
 
@@ -23,6 +25,8 @@ func HTTP() error {
 	cfg := config.New()
 
 	v := validator.New()
+
+	jwtTool := jwt.New(cfg.Database.JWTSecret)
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     cfg.Database.Redis.Address,
@@ -39,7 +43,7 @@ func HTTP() error {
 	}
 
 	playerD := playerData.New(db, rdb)
-	playerS := playerService.New(playerD)
+	playerS := playerService.New(playerD, jwtTool)
 
 	playerH := playerHandler.New(
 		playerS,

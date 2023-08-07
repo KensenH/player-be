@@ -131,7 +131,8 @@ func (d *PlayerData) InvalidateToken(ctx context.Context, tokenID string, expire
 		err error
 	)
 
-	err = d.Redis.Set(ctx, fmt.Sprintf("player:token:expired:%s", tokenID), expiredTime.String, expiredTime.Sub(time.Now())).Err()
+	//store invalid token to redis
+	err = d.Redis.Set(ctx, fmt.Sprintf("player:token:expired:%s", tokenID), expiredTime.String(), expiredTime.Sub(time.Now())).Err()
 	if err != nil {
 		return errors.Wrap(err, "error while registering invalid token")
 	}
@@ -147,13 +148,13 @@ func (d *PlayerData) TokenIsValid(ctx context.Context, tokenID string) (bool, er
 
 	key := fmt.Sprintf("player:token:expired:%s", tokenID)
 
+	//check if token is black listed in redis
 	_, err = d.Redis.Get(ctx, key).Result()
 	if err != nil {
 		if errors.Is(err, redis.Nil) {
-			return true, err
+			return true, nil
 		}
-
-		return true, errors.Wrap(err, "error while registering invalid token")
+		return false, errors.Wrap(err, "error while fetching data from redis")
 	}
 
 	return false, err

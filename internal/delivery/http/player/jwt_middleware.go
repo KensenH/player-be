@@ -7,12 +7,15 @@ import (
 func (h PlayerHandler) JwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
-			err  error
-			ok   bool
+			err error
+			ok  bool
+
+			//skip path below
 			skip = []string{
 				"/player-be/api/v1/player/signup",
 				"/player-be/api/v1/player/signin",
 				"/player-be/api/v1/player/signout",
+				"/",
 			}
 		)
 
@@ -22,6 +25,7 @@ func (h PlayerHandler) JwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			}
 		}
 
+		//take cookie from client
 		tokenCookie, err := c.Cookie("token")
 		if err != nil {
 			return echo.NewHTTPError(401, "Unauthorized")
