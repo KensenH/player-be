@@ -76,6 +76,60 @@ func (d *PlayerData) AddBankAccount(ctx context.Context, bankAcc e.BankAccount) 
 	return err
 }
 
+// add in-game currency
+func (d *PlayerData) AddInGameCurrency(ctx context.Context, playerId uint, sum int64) error {
+	var (
+		err    error
+		player = &e.Player{
+			ID: playerId,
+		}
+	)
+
+	err = d.DB.First(&player).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return inerr.ErrPlayerNotFound
+		}
+		return errors.Wrap(err, "[Data]AddInGameCurrency")
+	}
+
+	player.InGameCurrency += sum
+
+	err = d.DB.Save(&player).Error
+	if err != nil {
+		return errors.Wrap(err, "[Data]AddInGameCurrency")
+	}
+
+	return err
+}
+
+// subtract in-game currency
+func (d *PlayerData) SubInGameCurrency(ctx context.Context, playerId uint, sum int64) error {
+	var (
+		err    error
+		player = &e.Player{
+			ID: playerId,
+		}
+	)
+
+	err = d.DB.First(&player).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return inerr.ErrPlayerNotFound
+		}
+		return errors.Wrap(err, "[Data]AddInGameCurrency")
+	}
+
+	player.InGameCurrency -= sum
+
+	err = d.DB.Save(&player).Error
+	if err != nil {
+		return errors.Wrap(err, "[Data]AddInGameCurrency")
+	}
+
+	return err
+}
+
 // username exist in db
 func (d *PlayerData) UsernameExist(ctx context.Context, username string) bool {
 	var (
