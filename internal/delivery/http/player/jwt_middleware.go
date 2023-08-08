@@ -2,13 +2,16 @@ package player
 
 import (
 	"github.com/labstack/echo/v4"
+
+	e "player-be/internal/entity/player"
 )
 
 func (h PlayerHandler) JwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		var (
-			err error
-			ok  bool
+			err      error
+			ok       bool
+			playerId e.PlayerIdentity
 
 			//skip path below
 			skip = []string{
@@ -33,7 +36,9 @@ func (h PlayerHandler) JwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 
 		tokenStr := tokenCookie.Value
 
-		if ok, err = h.Service.JWTTokenValid(c.Request().Context(), tokenStr); ok {
+		// if valid create custom context so the service layer know who is accessing
+		if ok, playerId, err = h.Service.JWTTokenValid(c.Request().Context(), tokenStr); ok {
+			c.Set("playerId", playerId)
 			return next(c)
 		}
 		if err != nil {

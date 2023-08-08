@@ -3,30 +3,38 @@ package player
 import (
 	"time"
 
-	"gorm.io/gorm"
-
 	"github.com/golang-jwt/jwt/v5"
+	"gorm.io/gorm"
 )
 
 type Player struct {
-	gorm.Model
 	ID             uint           `json:"player_id" gorm:"primaryKey"`
 	Username       string         `json:"username" gorm:"type:varchar(15);uniqueIndex;not null"`
 	Password       string         `json:"password" gorm:"type:varchar(255);not null"`
 	FirstName      string         `json:"first_name" gorm:"type:varchar(255);not null"`
 	LastName       string         `json:"last_name" gorm:"type:varchar(255)"`
 	Email          string         `json:"email" gorm:"uniqueIndex;not null"`
-	InGameCurrency int64          `gorm:"default:0"`
-	SignUp         time.Time      `gorm:"not null"`
-	BankAccount    []BankAccount  `gorm:"foreignKey:PlayerID;references:ID"`
-	TopUpHistory   []TopUpHistory `gorm:"foreignKey:PlayerID;references:ID"`
+	InGameCurrency int64          `json:"in_game_currency" gorm:"default:0"`
+	SignUp         time.Time      `json:"join_date" gorm:"not null"`
+	BankAccount    BankAccount    `json:"bank_accounts" gorm:"foreignKey:PlayerID;references:ID"`
+	TopUpHistory   []TopUpHistory `json:"top_up_history" gorm:"foreignKey:PlayerID;references:ID"`
+}
+
+type PlayerDetail struct {
+	ID             uint   `json:"player_id"`
+	Username       string `json:"username"`
+	FirstName      string `json:"first_name"`
+	LastName       string `json:"last_name"`
+	Email          string `json:"email"`
+	InGameCurrency int64  `json:"in_game_currency"`
 }
 
 type BankAccount struct {
 	gorm.Model
-	PlayerID      uint   `json:"player_ids"`
-	BankName      string `json:"bank_name"`
-	AccountNumber string `json:"account_number"`
+	PlayerID         uint   `json:"player_id" validate:"required"`
+	BankName         string `json:"bank_name" validate:"required"`
+	AccountOwnerName string `json:"account_owner_name" validate:"required"`
+	AccountNumber    int64  `json:"account_number" validate:"required"`
 }
 
 type TopUpHistory struct {
@@ -37,25 +45,28 @@ type TopUpHistory struct {
 }
 
 type PlayerSignUpForm struct {
-	Username  string `json:"username" validate:"required"`
-	Password  string `json:"password" validate:"required"`
-	FirstName string `json:"first_name" validate:"required"`
-	LastName  string `json:"last_name"`
-	Email     string `json:"email" validate:"required,email"`
+	Username    string `json:"username" validate:"required"`
+	Password    string `json:"password" validate:"required"`
+	FirstName   string `json:"first_name" validate:"required,alpha"`
+	LastName    string `json:"last_name" validate:"alpha"`
+	PhoneNumber string `json:"phone_number" validate:"e164"`
+	Email       string `json:"email" validate:"required,email"`
 }
 
-type PlayerSignUpSuccess struct {
+type PlayerIdentity struct {
 	PlayerID uint      `json:"player_id"`
 	Username string    `json:"username"`
-	CreateAt time.Time `json:"created_at"`
+	CreateAt time.Time `json:"created_at,omitempty"`
 }
 
 type PlayerUserPass struct {
+	ID       uint   `json:"player_id"`
 	Username string `json:"username" validate:"required"`
 	Password string `json:"password" validate:"required"`
 }
 
 type JwtClaims struct {
+	PlayerID uint   `json:"player_id"`
 	Username string `json:"username"`
 	jwt.RegisteredClaims
 }

@@ -19,11 +19,10 @@ import (
 
 // set routes
 func (s *Server) handler() {
-	s.e.HTTPErrorHandler = errorHandler
-
+	s.e.Pre(s.PlayerHandler.JwtMiddleware)
 	s.e.Use(logger())
 
-	s.e.Pre(s.PlayerHandler.JwtMiddleware)
+	s.e.HTTPErrorHandler = errorHandler
 
 	s.e.GET("/", defaultRoute)
 
@@ -35,6 +34,12 @@ func (s *Server) handler() {
 	playerV1.POST("/signup", s.PlayerHandler.SignUp)
 	playerV1.POST("/signin", s.PlayerHandler.SignIn)
 	playerV1.GET("/signout", s.PlayerHandler.SignOut)
+
+	playerV1.GET("/detail/:id", s.PlayerHandler.GetPlayerDetail)
+
+	// playerV1.GET("/profile", )
+	playerV1.POST("/addbankaccount", s.PlayerHandler.AddBankAccount)
+
 	playerV1.GET("/test", defaultRoute)
 
 }

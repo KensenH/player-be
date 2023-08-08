@@ -8,4 +8,5 @@ var (
 	ErrUnMarshal                 = errors.New("error while unmashaling data")
 	ErrUsernameIsTaken           = errors.New("username is already taken")
 	ErrEmailIsTaken              = errors.New("email is already used by another account")
+	ErrPlayerNotFound            = errors.New("player not found")
 )

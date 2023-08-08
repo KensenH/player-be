@@ -1,3 +1,5 @@
+// package to help create and parse jwt token
+// internal use only
 package jwt
 
 import (
@@ -6,6 +8,8 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
+
+	e "player-be/internal/entity/player"
 )
 
 type jwtData struct {
@@ -13,13 +17,8 @@ type jwtData struct {
 }
 
 type jwtPack interface {
-	CreateJWT(username string, expirationTime time.Time) (string, error)
-	ParseJWT(tokenStr string) (token *jwt.Token, claimsID string, err error)
-}
-
-type JwtClaims struct {
-	Username string `json:"username"`
-	jwt.RegisteredClaims
+	CreateJWT(playerId e.PlayerIdentity, expirationTime time.Time) (string, error)
+	ParseJWT(tokenStr string) (token *jwt.Token, claims e.JwtClaims, err error)
 }
 
 func New(secret string) jwtPack {
@@ -28,13 +27,14 @@ func New(secret string) jwtPack {
 	}
 }
 
-func (d jwtData) CreateJWT(username string, expirationTime time.Time) (string, error) {
+func (d jwtData) CreateJWT(playerId e.PlayerIdentity, expirationTime time.Time) (string, error) {
 	var (
 		err      error
 		tokenStr string
 	)
-	claims := &JwtClaims{
-		Username: username,
+	claims := &e.JwtClaims{
+		PlayerID: playerId.PlayerID,
+		Username: playerId.Username,
 		RegisteredClaims: jwt.RegisteredClaims{
 			ID:        random.RandString(20),
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
@@ -51,14 +51,13 @@ func (d jwtData) CreateJWT(username string, expirationTime time.Time) (string, e
 	return tokenStr, err
 }
 
-func (d jwtData) ParseJWT(tokenStr string) (token *jwt.Token, claimsID string, err error) {
-	var claims JwtClaims
+func (d jwtData) ParseJWT(tokenStr string) (token *jwt.Token, claims e.JwtClaims, err error) {
 	token, err = jwt.ParseWithClaims(tokenStr, &claims, func(token *jwt.Token) (interface{}, error) {
 		return []byte(d.Secret), nil
 	})
 	if err != nil {
-		return token, claimsID, errors.Wrap(err, "error while parsing jwt token")
+		return token, claims, errors.Wrap(err, "error while parsing jwt token")
 	}
 
-	return token, claims.ID, err
+	return token, claims, err
 }
