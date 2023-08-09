@@ -21,7 +21,7 @@ func (h PlayerHandler) GetPlayerDetail(c echo.Context) error {
 
 	playerId, err := strconv.ParseUint(idStr, 10, 64)
 	if err != nil {
-		return echo.NewHTTPError(501, err.Error())
+		return echo.NewHTTPError(500, err.Error())
 	}
 
 	player, err = h.Service.GetPlayerDetail(c.Request().Context(), uint(playerId))
@@ -29,7 +29,7 @@ func (h PlayerHandler) GetPlayerDetail(c echo.Context) error {
 		if errors.Is(err, inerr.ErrPlayerNotFound) {
 			return c.JSON(200, map[string]string{"message": err.Error()})
 		}
-		return echo.NewHTTPError(501, err.Error())
+		return echo.NewHTTPError(500, err.Error())
 	}
 
 	return c.JSON(200, player)
@@ -44,7 +44,7 @@ func (h PlayerHandler) AddBankAccount(c echo.Context) error {
 	)
 
 	if playerId.Username == "" {
-		return echo.NewHTTPError(501, "username kosong")
+		return echo.NewHTTPError(500, "username kosong")
 	}
 
 	err = c.Bind(&bankAcc)
@@ -61,7 +61,7 @@ func (h PlayerHandler) AddBankAccount(c echo.Context) error {
 
 	err = h.Service.AddBankAccount(c.Request().Context(), bankAcc)
 	if err != nil {
-		return echo.NewHTTPError(501, err.Error())
+		return echo.NewHTTPError(500, err.Error())
 	}
 
 	return c.JSON(200, map[string]string{"message": "success adding bank account"})
@@ -76,12 +76,12 @@ func (h PlayerHandler) TopUp(c echo.Context) error {
 
 	err = c.Bind(&topUp)
 	if err != nil {
-		return echo.NewHTTPError(501, err.Error())
+		return echo.NewHTTPError(500, err.Error())
 	}
 
 	receipt, err := h.Service.TopUp(c.Request().Context(), playerId.PlayerID, topUp.TopUpAmount)
 	if err != nil {
-		return echo.NewHTTPError(501, err.Error())
+		return echo.NewHTTPError(500, err.Error())
 	}
 
 	return c.JSON(200, map[string]interface{}{
@@ -89,10 +89,26 @@ func (h PlayerHandler) TopUp(c echo.Context) error {
 	})
 }
 
-// func (h PlayerHandler) SearchPlayer(c echo.Context) error {
-// 	var (
-// 		err    error
-// 		player e.PlayerDetail
-// 	)
+func (h PlayerHandler) SearchPlayer(c echo.Context) error {
+	var (
+		err     error
+		filter  e.PlayerFilter
+		players []e.Player
+	)
+	err = c.Bind(&filter)
+	if err != nil {
+		return echo.NewHTTPError(401)
+	}
 
-// }
+	err = h.validator.Struct(&filter)
+	if err != nil {
+		return err
+	}
+
+	players, err = h.Service.SearchPlayer(c.Request().Context(), filter)
+	if err != nil {
+		return echo.NewHTTPError(500, err.Error())
+	}
+
+	return c.JSON(200, players)
+}

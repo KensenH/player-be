@@ -10,6 +10,7 @@ import (
 )
 
 type Option func(*PlayerData)
+type Scope []func(db *gorm.DB) *gorm.DB
 
 type PlayerData struct {
 	DB    *gorm.DB

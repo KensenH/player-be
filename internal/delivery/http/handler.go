@@ -42,6 +42,8 @@ func (s *Server) handler() {
 	playerV1.POST("/addbankaccount", s.PlayerHandler.AddBankAccount)
 	playerV1.POST("/topup", s.PlayerHandler.TopUp)
 
+	playerV1.GET("/search", s.PlayerHandler.SearchPlayer)
+
 	playerV1.GET("/test", defaultRoute)
 
 }

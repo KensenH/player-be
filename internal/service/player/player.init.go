@@ -5,11 +5,13 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"gorm.io/gorm"
 
 	e "player-be/internal/entity/player"
 )
 
 type Option func(*PlayerService)
+type Scope []func(db *gorm.DB) *gorm.DB
 
 type PlayerService struct {
 	Data    PlayerData
@@ -29,9 +31,19 @@ type PlayerData interface {
 
 	GetPlayerDetail(ctx context.Context, playerId uint) (e.PlayerDetail, error)
 
+	SearchPlayer(ctx context.Context, scopes []Scope) ([]e.Player, error)
+
 	AddBankAccount(ctx context.Context, bankAcc e.BankAccount) error
 	AddInGameCurrency(ctx context.Context, playerId uint, sum int64) error
 	InputTopUpHistory(ctx context.Context, topUp *e.TopUpHistory) error
+
+	//scopes
+	PlayerId(playerId uint) Scope
+	MinInGameCurrency(min int64) Scope
+	MaxInGameCurrency(max int64) Scope
+	UsernameLike(input string) Scope
+	JoinAfter(date time.Time) Scope
+	JoinBefore(date time.Time) Scope
 }
 
 type JwtTool interface {

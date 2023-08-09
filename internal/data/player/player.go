@@ -115,6 +115,16 @@ func (d *PlayerData) InputTopUpHistory(ctx context.Context, topUp *e.TopUpHistor
 	return nil
 }
 
+// search player
+func (d *PlayerData) SearchPlayer(ctx context.Context, scopes []Scope) ([]e.Player, error) {
+	var (
+		err     error
+		players []e.Player
+	)
+
+	return players, err
+}
+
 // username exist in db
 func (d *PlayerData) UsernameExist(ctx context.Context, username string) bool {
 	var (
