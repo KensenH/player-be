@@ -1,0 +1,26 @@
+services:
+  redis:
+    image: "redis:6.2.13-alpine"
+    restart: always
+    ports:
+      - '6379:6379'
+  postgres: 
+    image: "postgres:alpine3.18"
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=mysecretpassword
+    ports:
+      - '5432:5432'
+    volumes: 
+      - ./postgres_data/:/var/lib/postgresql/data
+  playerbe:
+    build: .
+    restart: always
+    environment:
+       - RUN_ENV=docker-compose
+    ports:
+      - "8080:8080"
+    depends_on:
+      - redis
+      - postgres

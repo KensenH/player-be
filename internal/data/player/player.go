@@ -119,8 +119,10 @@ func (d *PlayerData) InputTopUpHistory(ctx context.Context, topUp *e.TopUpHistor
 // get top up histories by player id
 func (d *PlayerData) GetTopUpHistory(ctx context.Context, playerId uint) ([]e.TopUpHistory, error) {
 	var (
-		err       error
-		history   e.TopUpHistory
+		err     error
+		history = e.TopUpHistory{
+			PlayerID: playerId,
+		}
 		histories []e.TopUpHistory
 	)
 

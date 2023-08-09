@@ -35,5 +35,11 @@ func New() Config {
 		log.Fatalf("[Config] error parsing config: %v", err)
 	}
 
+	runEnv := os.Getenv("RUN_ENV")
+	if runEnv != "" {
+		cfg.Database.Postgres = "postgresql://postgres:mysecretpassword@postgres:5432/player"
+		cfg.Database.Redis.Address = "redis:6379"
+	}
+
 	return cfg
 }
