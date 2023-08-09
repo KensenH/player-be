@@ -1,0 +1,210 @@
+{
+	"info": {
+		"_postman_id": "6deb102f-7e40-4adb-8ae6-69f7db2dd5a1",
+		"name": "player-be",
+		"schema": "https://schema.getpostman.com/json/collection/v2.0.0/collection.json",
+		"_exporter_id": "25072264"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Sign Up",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": {
+								"token": "222"
+							}
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"username\" : \"lubu\",\n    \"password\" : \"diaochan123\",\n    \"first_name\" : \"lu\",\n    \"last_name\": \"bu\",\n    \"phone_number\": \"+628134847723\",\n    \"email\": \"lubu@gmail.com\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "localhost:8080/player-be/api/v1/player/signup"
+					},
+					"response": []
+				},
+				{
+					"name": "Sign In",
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": {
+								"password": "diaochan123",
+								"username": "lubu"
+							}
+						},
+						"method": "GET",
+						"header": [],
+						"url": "localhost:8080/player-be/api/v1/player/signin"
+					},
+					"response": []
+				},
+				{
+					"name": "Sign Out",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": "localhost:8080/player-be/api/v1/player/signout"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Player",
+			"item": [
+				{
+					"name": "Add Bank Account",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"bank_name\": \"bca\",\n    \"account_owner_name\": \"lubui\",\n    \"account_number\": 12371203810236\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "localhost:8080/player-be/api/v1/player/addbankaccount"
+					},
+					"response": []
+				},
+				{
+					"name": "Top Up",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"top_up_amount\": 1000000\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": "localhost:8080/player-be/api/v1/player/topup"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Player Detail",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": "localhost:8080/player-be/api/v1/player/detail/5"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Player",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "localhost:8080/player-be/api/v1/player/search?bank_name=bca",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"player-be",
+								"api",
+								"v1",
+								"player",
+								"search"
+							],
+							"query": [
+								{
+									"key": "join_before",
+									"value": "10-08-2023",
+									"disabled": true
+								},
+								{
+									"key": "join_after",
+									"value": "10-08-2023",
+									"disabled": true
+								},
+								{
+									"key": "max_ingame_currency",
+									"value": "60000000",
+									"disabled": true
+								},
+								{
+									"key": "username",
+									"value": "lu",
+									"disabled": true
+								},
+								{
+									"key": "player_id",
+									"value": "3",
+									"disabled": true
+								},
+								{
+									"key": "min_ingame_currency",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "bank_name",
+									"value": "bca"
+								},
+								{
+									"key": "bank_account_name",
+									"value": "lub",
+									"disabled": true
+								},
+								{
+									"key": "bank_account_number",
+									"value": null,
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Profile",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Receipts",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "default",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": "localhost:8080/"
+			},
+			"response": []
+		}
+	]
+}
