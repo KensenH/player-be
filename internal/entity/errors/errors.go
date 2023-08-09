@@ -9,4 +9,5 @@ var (
 	ErrUsernameIsTaken           = errors.New("username is already taken")
 	ErrEmailIsTaken              = errors.New("email is already used by another account")
 	ErrPlayerNotFound            = errors.New("player not found")
+	ErrInsufficientInGameMoney   = errors.New("insufficient ingame money")
 )

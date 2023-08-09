@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"encoding/json"
+
 	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
@@ -12,6 +14,32 @@ import (
 	inerr "player-be/internal/entity/errors"
 	e "player-be/internal/entity/player"
 )
+
+// register new player to db
+func (d *PlayerData) AddNewPlayer(ctx context.Context, newUser e.Player) (e.PlayerIdentity, error) {
+	var (
+		err  error
+		resp e.PlayerIdentity
+	)
+
+	result := d.DB.Create(&newUser)
+	if result.Error != nil {
+		return resp, errors.Wrap(result.Error, "[DATA][AddNewPlayer] ")
+	}
+
+	//convert to e.Player to e.PlayerSignUpSuccess struct
+	playerJson, err := json.Marshal(newUser)
+	if err != nil {
+		return resp, errors.Wrap(err, "[DATA][AddNewPlayer] ")
+	}
+
+	err = json.Unmarshal(playerJson, &resp)
+	if err != nil {
+		return resp, errors.Wrap(err, "[DATA][AddNewPlayer] ")
+	}
+
+	return resp, err
+}
 
 // get user's hashed password from db
 func (d *PlayerData) GetHashedPassword(ctx context.Context, username string) (e.PlayerUserPass, error) {
@@ -37,12 +65,8 @@ func (d *PlayerData) GetHashedPassword(ctx context.Context, username string) (e.
 
 // store invalid tokenID to redis
 func (d *PlayerData) InvalidateToken(ctx context.Context, tokenID string, expiredTime time.Time) error {
-	var (
-		err error
-	)
-
 	//store invalid token to redis
-	err = d.Redis.Set(ctx, fmt.Sprintf("player:token:expired:%s", tokenID), expiredTime.String(), expiredTime.Sub(time.Now())).Err()
+	err := d.Redis.Set(ctx, fmt.Sprintf("player:token:expired:%s", tokenID), expiredTime.String(), time.Until(expiredTime)).Err()
 	if err != nil {
 		return errors.Wrap(err, "error while registering invalid token")
 	}

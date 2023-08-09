@@ -2,7 +2,6 @@ package player
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
@@ -10,32 +9,6 @@ import (
 	inerr "player-be/internal/entity/errors"
 	e "player-be/internal/entity/player"
 )
-
-// register new player to db
-func (d *PlayerData) AddNewPlayer(ctx context.Context, newUser e.Player) (e.PlayerIdentity, error) {
-	var (
-		err  error
-		resp e.PlayerIdentity
-	)
-
-	result := d.DB.Create(&newUser)
-	if result.Error != nil {
-		return resp, errors.Wrap(result.Error, "[DATA][AddNewPlayer] ")
-	}
-
-	//convert to e.Player to e.PlayerSignUpSuccess struct
-	playerJson, err := json.Marshal(newUser)
-	if err != nil {
-		return resp, errors.Wrap(err, "[DATA][AddNewPlayer] ")
-	}
-
-	err = json.Unmarshal(playerJson, &resp)
-	if err != nil {
-		return resp, errors.Wrap(err, "[DATA][AddNewPlayer] ")
-	}
-
-	return resp, err
-}
 
 // get player detail
 func (d *PlayerData) GetPlayerDetail(ctx context.Context, playerId uint) (e.PlayerDetail, error) {
@@ -61,16 +34,14 @@ func (d *PlayerData) GetPlayerDetail(ctx context.Context, playerId uint) (e.Play
 // add or update player's bank account
 func (d *PlayerData) AddBankAccount(ctx context.Context, bankAcc e.BankAccount) error {
 	var (
-		err    error
-		player = &e.Player{
-			ID:          bankAcc.PlayerID,
-			BankAccount: bankAcc,
-		}
+		err error
 	)
 
-	result := d.DB.Save(&player)
-	if result.Error != nil {
-		return errors.Wrap(result.Error, "[Data] AddBankAccount")
+	if d.DB.Model(&bankAcc).Where("player_id = ?", bankAcc.PlayerID).Updates(&bankAcc).RowsAffected == 0 {
+		result := d.DB.Create(&bankAcc)
+		if result.Error != nil {
+			return errors.Wrap(err, "[Data]AddBankAccount")
+		}
 	}
 
 	return err
@@ -120,6 +91,10 @@ func (d *PlayerData) SubInGameCurrency(ctx context.Context, playerId uint, sum i
 		return errors.Wrap(err, "[Data]AddInGameCurrency")
 	}
 
+	if player.InGameCurrency < sum {
+		return inerr.ErrInsufficientInGameMoney
+	}
+
 	player.InGameCurrency -= sum
 
 	err = d.DB.Save(&player).Error
@@ -128,6 +103,16 @@ func (d *PlayerData) SubInGameCurrency(ctx context.Context, playerId uint, sum i
 	}
 
 	return err
+}
+
+// input transaction to history
+func (d *PlayerData) InputTopUpHistory(ctx context.Context, topUp *e.TopUpHistory) error {
+	result := d.DB.Create(&topUp)
+	if result.Error != nil {
+		return errors.Wrap(result.Error, "[Data]CreateTopUpHistory")
+	}
+
+	return nil
 }
 
 // username exist in db
@@ -141,11 +126,8 @@ func (d *PlayerData) UsernameExist(ctx context.Context, username string) bool {
 	)
 
 	result := d.DB.Model(&player).Where(&player).First(&dbResult)
-	if result.Error != nil {
-		return false
-	}
 
-	return true
+	return result.Error == nil
 }
 
 // email already registered in db
@@ -159,9 +141,6 @@ func (d *PlayerData) EmailRegistered(ctx context.Context, email string) bool {
 	)
 
 	result := d.DB.Model(&player).Where(&player).First(&dbResult)
-	if result.Error != nil {
-		return false
-	}
 
-	return true
+	return result.Error == nil
 }

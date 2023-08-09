@@ -1,14 +1,14 @@
 package http
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
+
+	"github.com/pkg/errors"
 
 	log "github.com/sirupsen/logrus"
 
@@ -19,10 +19,11 @@ import (
 
 // set routes
 func (s *Server) handler() {
-	s.e.Pre(s.PlayerHandler.JwtMiddleware)
-	s.e.Use(logger())
-
 	s.e.HTTPErrorHandler = errorHandler
+
+	s.e.Pre(s.PlayerHandler.JwtMiddleware)
+
+	s.e.Use(logger())
 
 	s.e.GET("/", defaultRoute)
 
@@ -39,6 +40,7 @@ func (s *Server) handler() {
 
 	// playerV1.GET("/profile", )
 	playerV1.POST("/addbankaccount", s.PlayerHandler.AddBankAccount)
+	playerV1.POST("/topup", s.PlayerHandler.TopUp)
 
 	playerV1.GET("/test", defaultRoute)
 
@@ -64,10 +66,11 @@ func errorHandler(err error, c echo.Context) {
 	if errors.As(err, &ve) {
 		for _, fe := range ve {
 			report.Message = valmsg.MsgForTag(fe)
+			report.Code = 401
 			break
 		}
 	} else {
-		report.Message = fmt.Sprintf("%s", err.Error())
+		report.Message = err.Error()
 	}
 
 	c.Logger().Error(report)

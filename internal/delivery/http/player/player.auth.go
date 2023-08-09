@@ -28,9 +28,9 @@ func (h PlayerHandler) SignUp(c echo.Context) error {
 	}
 
 	//validate form
-	err = h.validator.Struct(form)
+	err = h.validator.Struct(&form)
 	if err != nil {
-		return echo.NewHTTPError(400, err.Error())
+		return err
 	}
 
 	resp, err = h.Service.SignUp(c.Request().Context(), form)
@@ -58,7 +58,7 @@ func (h PlayerHandler) SignIn(c echo.Context) error {
 	//validate form
 	err = h.validator.Struct(form)
 	if err != nil {
-		return echo.NewHTTPError(400, err.Error())
+		return err
 	}
 
 	//jwt TTL

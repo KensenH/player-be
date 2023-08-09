@@ -11,7 +11,7 @@ import (
 func MsgForTag(fe validator.FieldError) string {
 	switch fe.Tag() {
 	case "required":
-		return "This field is required"
+		return fmt.Sprintf("%s is required", fe.Field())
 	case "email":
 		return "Invalid email"
 	case "alpha":

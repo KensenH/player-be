@@ -26,6 +26,8 @@ type PlayerService interface {
 	GetPlayerDetail(ctx context.Context, playerId uint) (e.PlayerDetail, error)
 
 	AddBankAccount(ctx context.Context, bankAcc e.BankAccount) error
+
+	TopUp(ctx context.Context, playerId uint, sum int64) (e.TopUpHistory, error)
 }
 
 // new player handler

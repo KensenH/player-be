@@ -42,7 +42,7 @@ func (h PlayerHandler) JwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
 			return next(c)
 		}
 		if err != nil {
-			echo.NewHTTPError(501, err.Error())
+			return echo.NewHTTPError(501, err.Error())
 		}
 
 		return echo.NewHTTPError(401, "Unauthorized")

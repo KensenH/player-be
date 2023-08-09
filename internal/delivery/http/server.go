@@ -26,6 +26,7 @@ type PlayerHandler interface {
 	SignOut(c echo.Context) error
 	GetPlayerDetail(c echo.Context) error
 	AddBankAccount(c echo.Context) error
+	TopUp(c echo.Context) error
 	JwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc
 }
 

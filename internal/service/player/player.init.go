@@ -21,15 +21,17 @@ type PlayerData interface {
 
 	UsernameExist(ctx context.Context, username string) bool
 	EmailRegistered(ctx context.Context, email string) bool
-	
+
 	GetHashedPassword(ctx context.Context, username string) (e.PlayerUserPass, error)
-	
+
 	InvalidateToken(ctx context.Context, tokenID string, expiredTime time.Time) error
 	TokenIsValid(ctx context.Context, tokenID string) (bool, error)
-	
+
 	GetPlayerDetail(ctx context.Context, playerId uint) (e.PlayerDetail, error)
-	
+
 	AddBankAccount(ctx context.Context, bankAcc e.BankAccount) error
+	AddInGameCurrency(ctx context.Context, playerId uint, sum int64) error
+	InputTopUpHistory(ctx context.Context, topUp *e.TopUpHistory) error
 }
 
 type JwtTool interface {

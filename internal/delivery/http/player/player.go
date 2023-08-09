@@ -49,14 +49,14 @@ func (h PlayerHandler) AddBankAccount(c echo.Context) error {
 
 	err = c.Bind(&bankAcc)
 	if err != nil {
-		return echo.NewHTTPError(501, err.Error())
+		return err
 	}
 
 	bankAcc.PlayerID = playerId.PlayerID
 
 	err = h.validator.Struct(&bankAcc)
 	if err != nil {
-		return echo.NewHTTPError(401, err.Error())
+		return err
 	}
 
 	err = h.Service.AddBankAccount(c.Request().Context(), bankAcc)
@@ -65,6 +65,28 @@ func (h PlayerHandler) AddBankAccount(c echo.Context) error {
 	}
 
 	return c.JSON(200, map[string]string{"message": "success adding bank account"})
+}
+
+func (h PlayerHandler) TopUp(c echo.Context) error {
+	var (
+		err      error
+		playerId = c.Get("playerId").(e.PlayerIdentity)
+		topUp    e.TopUpRequest
+	)
+
+	err = c.Bind(&topUp)
+	if err != nil {
+		return echo.NewHTTPError(501, err.Error())
+	}
+
+	receipt, err := h.Service.TopUp(c.Request().Context(), playerId.PlayerID, topUp.TopUpAmount)
+	if err != nil {
+		return echo.NewHTTPError(501, err.Error())
+	}
+
+	return c.JSON(200, map[string]interface{}{
+		"receipt": receipt,
+	})
 }
 
 // func (h PlayerHandler) SearchPlayer(c echo.Context) error {
