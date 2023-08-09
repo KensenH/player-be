@@ -26,7 +26,9 @@ type PlayerHandler interface {
 	SignOut(c echo.Context) error
 
 	GetPlayerDetail(c echo.Context) error
+	GetProfile(c echo.Context) error
 
+	Receipts(c echo.Context) error
 	AddBankAccount(c echo.Context) error
 	TopUp(c echo.Context) error
 

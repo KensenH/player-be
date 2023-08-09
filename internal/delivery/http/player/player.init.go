@@ -24,10 +24,11 @@ type PlayerService interface {
 	JWTTokenValid(ctx context.Context, tokenStr string) (bool, e.PlayerIdentity, error)
 
 	GetPlayerDetail(ctx context.Context, playerId uint) (e.PlayerDetail, error)
-
-	SearchPlayer(ctx context.Context, filter e.PlayerFilter) ([]e.Player, error)
-
+	
+	SearchPlayer(ctx context.Context, filter e.PlayerFilter) ([]e.PlayerDetail, error)
+	
 	AddBankAccount(ctx context.Context, bankAcc e.BankAccount) error
+	GetTopUpHistory(ctx context.Context, playerId uint) ([]e.TopUpHistory, error)
 
 	TopUp(ctx context.Context, playerId uint, sum int64) (e.TopUpHistory, error)
 }

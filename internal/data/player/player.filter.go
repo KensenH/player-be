@@ -1,44 +1,63 @@
 package player
 
 import (
+	"fmt"
 	"time"
 
 	"gorm.io/gorm"
 )
 
 // scopes
-func (d *PlayerData) PlayerId(playerId uint) func(db *gorm.DB) *gorm.DB {
+func scopePlayerId(playerId uint) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Where("id = ?", playerId)
 	}
 }
 
-func (d *PlayerData) MinInGameCurrency(min int64) func(db *gorm.DB) *gorm.DB {
+func scopeMinInGameCurrency(min int64) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Where("in_game_currency >= ?", min)
 	}
 }
 
-func (d *PlayerData) MaxInGameCurrency(max int64) func(db *gorm.DB) *gorm.DB {
+func scopeMaxInGameCurrency(max int64) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Where("in_game_currency <= ?", max)
 	}
 }
 
-func (d *PlayerData) UsernameLike(input string) func(db *gorm.DB) *gorm.DB {
+func scopeUsernameLike(input string) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		return db.Where("username ILIKE ('%?%')", input)
+		return db.Where("username ILIKE (?)", fmt.Sprintf("%%%s%%", input))
 	}
 }
 
-func (d *PlayerData) JoinAfter(date time.Time) func(db *gorm.DB) *gorm.DB {
+func scopeJoinAfter(date time.Time) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Where("sign_up >= ?", date)
 	}
 }
 
-func JoinBefore(date time.Time) func(db *gorm.DB) *gorm.DB {
+func scopeJoinBefore(date time.Time) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
 		return db.Where("sign_up <= ?", date)
+	}
+}
+
+func scopeBankNameLike(input string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where("bank_name ILIKE (?)", fmt.Sprintf("%%%s%%", input))
+	}
+}
+
+func scopeBankAccountNameLike(input string) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where("bank_account_name ILIKE (?)", fmt.Sprintf("%%%s%%", input))
+	}
+}
+
+func scopeBankAccuntNumberLike(input int64) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where("bank_name = ?", input)
 	}
 }

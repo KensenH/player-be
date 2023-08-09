@@ -10,7 +10,6 @@ import (
 )
 
 type Option func(*PlayerData)
-type Scope []func(db *gorm.DB) *gorm.DB
 
 type PlayerData struct {
 	DB    *gorm.DB
@@ -27,7 +26,7 @@ func New(db *gorm.DB, redis *redis.Client, opts ...Option) *PlayerData {
 		opt(playerData)
 	}
 
-	err := db.AutoMigrate(&e.Player{}, &e.BankAccount{}, &e.TopUpHistory{})
+	err := db.AutoMigrate(&e.Player{}, &e.TopUpHistory{})
 	if err != nil {
 		log.Fatalf("[Player Data] %s", err.Error())
 	}

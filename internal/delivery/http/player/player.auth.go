@@ -1,6 +1,7 @@
 package player
 
 import (
+	"encoding/base64"
 	"net/http"
 	"strings"
 	"time"
@@ -45,14 +46,25 @@ func (h PlayerHandler) SignUp(c echo.Context) error {
 // api/v1/player/signin
 func (h PlayerHandler) SignIn(c echo.Context) error {
 	var (
-		err  error
-		form playerEntity.PlayerUserPass
+		err error
 	)
 
-	//bind body
-	err = c.Bind(&form)
+	authHeader := c.Request().Header.Get("Authorization")
+
+	if len(authHeader) < 6 || authHeader[:6] != "Basic " {
+		return echo.NewHTTPError(401, "Unauthorized")
+	}
+
+	decoded, err := base64.StdEncoding.DecodeString(authHeader[6:])
 	if err != nil {
-		return echo.NewHTTPError(501, err.Error())
+		return echo.NewHTTPError(401, "Unauthorized")
+	}
+
+	credential := strings.Split(string(decoded), ":")
+
+	form := playerEntity.PlayerUserPass{
+		Username: credential[0],
+		Password: credential[1],
 	}
 
 	//validate form
