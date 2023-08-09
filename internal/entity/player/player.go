@@ -8,33 +8,40 @@ import (
 )
 
 type Player struct {
-	ID             uint           `json:"player_id" gorm:"primaryKey"`
-	Username       string         `json:"username" gorm:"type:varchar(15);uniqueIndex;not null"`
-	Password       string         `json:"password" gorm:"type:varchar(255);not null"`
-	FirstName      string         `json:"first_name" gorm:"type:varchar(255);not null"`
-	LastName       string         `json:"last_name" gorm:"type:varchar(255)"`
-	Email          string         `json:"email" gorm:"uniqueIndex;not null"`
-	InGameCurrency int64          `json:"in_game_currency" gorm:"default:0"`
-	SignUp         time.Time      `json:"join_date" gorm:"not null;default:now()"`
-	BankAccount    BankAccount    `json:"bank_accounts" gorm:"foreignKey:PlayerID;references:ID"`
-	TopUpHistory   []TopUpHistory `json:"top_up_history" gorm:"foreignKey:PlayerID;references:ID"`
+	ID                uint           `json:"player_id" gorm:"primaryKey"`
+	Username          string         `json:"username" gorm:"type:varchar(15);uniqueIndex;not null"`
+	Password          string         `json:"password" gorm:"type:varchar(255);not null"`
+	FirstName         string         `json:"first_name" gorm:"type:varchar(255);not null"`
+	LastName          string         `json:"last_name" gorm:"type:varchar(255)"`
+	PhoneNumber       string         `json:"phone_number" gorm:"type:text;not null"`
+	Email             string         `json:"email" gorm:"uniqueIndex;not null"`
+	InGameCurrency    int64          `json:"in_game_currency" gorm:"default:0"`
+	SignUp            time.Time      `json:"join_date" gorm:"not null;default:now()"`
+	BankName          string         `json:"bank_name,omitempty"`
+	BankAccountName   string         `json:"bank_account_name,omitempty"`
+	BankAccountNumber int64          `json:"bank_account_number,omitempty" gorm:"type:BIGINT"`
+	TopUpHistory      []TopUpHistory `json:"top_up_history" gorm:"foreignKey:PlayerID;references:ID"`
 }
 
 type PlayerDetail struct {
-	ID             uint   `json:"player_id"`
-	Username       string `json:"username"`
-	FirstName      string `json:"first_name"`
-	LastName       string `json:"last_name"`
-	Email          string `json:"email"`
-	InGameCurrency int64  `json:"in_game_currency"`
+	ID                uint      `json:"player_id"`
+	Username          string    `json:"username"`
+	FirstName         string    `json:"first_name"`
+	LastName          string    `json:"last_name,omitempty"`
+	PhoneNumber       string    `json:"phone_number"`
+	Email             string    `json:"email"`
+	InGameCurrency    int64     `json:"in_game_currency"`
+	SignUp            time.Time `json:"join_date" gorm:"not null;default:now()"`
+	BankName          string    `json:"bank_name,omitempty"`
+	BankAccountName   string    `json:"bank_account_name,omitempty"`
+	BankAccountNumber int64     `json:"bank_account_number,omitempty"`
 }
 
 type BankAccount struct {
-	gorm.Model
-	PlayerID         uint   `json:"player_id" validate:"required" gorm:"uniqueIndex"`
-	BankName         string `json:"bank_name" validate:"required"`
-	AccountOwnerName string `json:"account_owner_name" validate:"required"`
-	AccountNumber    int64  `json:"account_number" validate:"required"`
+	PlayerID         uint   `json:"player_id,omitempty" validate:"required" gorm:"uniqueIndex"`
+	BankName         string `json:"bank_name,omitempty" validate:"required"`
+	AccountOwnerName string `json:"account_owner_name,omitempty" validate:"required"`
+	AccountNumber    int64  `json:"account_number,omitempty" validate:"required"`
 }
 
 type TopUpHistory struct {

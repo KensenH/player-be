@@ -32,18 +32,23 @@ func (s *Server) handler() {
 
 	//player
 	playerV1 := apiV1.Group("/player")
+
+	//auth
 	playerV1.POST("/signup", s.PlayerHandler.SignUp)
-	playerV1.POST("/signin", s.PlayerHandler.SignIn)
+	playerV1.GET("/signin", s.PlayerHandler.SignIn)
 	playerV1.GET("/signout", s.PlayerHandler.SignOut)
 
+	//player detail
 	playerV1.GET("/detail/:id", s.PlayerHandler.GetPlayerDetail)
 
-	// playerV1.GET("/profile", )
+	//individual
 	playerV1.POST("/addbankaccount", s.PlayerHandler.AddBankAccount)
 	playerV1.POST("/topup", s.PlayerHandler.TopUp)
+	playerV1.GET("/profile", s.PlayerHandler.GetProfile)
+	playerV1.GET("/receipts", s.PlayerHandler.Receipts)
 
-	playerV1.GET("/test", defaultRoute)
-
+	//search
+	playerV1.GET("/search", s.PlayerHandler.SearchPlayer)
 }
 
 // default route

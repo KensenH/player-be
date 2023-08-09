@@ -17,7 +17,9 @@ func MsgForTag(fe validator.FieldError) string {
 	case "alpha":
 		return fmt.Sprintf("%s can only be alpha characters", fe.Field())
 	case "e164":
-		return "Invalid phone number, example: '+62813XXXXXXXX'"
+		return "Invalid phone number (ex: '+62813XXXXXXXX')"
+	case "datetime":
+		return fmt.Sprintf("%s date is invalid (ex: '02-01-2006', or 'DD-MM-YYYY')", fe.Field())
 	}
 	return fe.Error()
 }

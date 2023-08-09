@@ -34,15 +34,16 @@ func (d *PlayerData) GetPlayerDetail(ctx context.Context, playerId uint) (e.Play
 // add or update player's bank account
 func (d *PlayerData) AddBankAccount(ctx context.Context, bankAcc e.BankAccount) error {
 	var (
-		err error
+		err    error
+		player = e.Player{
+			ID:                bankAcc.PlayerID,
+			BankName:          bankAcc.BankName,
+			BankAccountName:   bankAcc.AccountOwnerName,
+			BankAccountNumber: bankAcc.AccountNumber,
+		}
 	)
 
-	if d.DB.Model(&bankAcc).Where("player_id = ?", bankAcc.PlayerID).Updates(&bankAcc).RowsAffected == 0 {
-		result := d.DB.Create(&bankAcc)
-		if result.Error != nil {
-			return errors.Wrap(err, "[Data]AddBankAccount")
-		}
-	}
+	d.DB.Model(&player).Updates(&player)
 
 	return err
 }
@@ -113,6 +114,74 @@ func (d *PlayerData) InputTopUpHistory(ctx context.Context, topUp *e.TopUpHistor
 	}
 
 	return nil
+}
+
+func (d *PlayerData) GetTopUpHistory(ctx context.Context, playerId uint) ([]e.TopUpHistory, error) {
+	var (
+		err       error
+		history   e.TopUpHistory
+		histories []e.TopUpHistory
+	)
+
+	result := d.DB.Where(&history).Find(&histories)
+	if result.Error != nil {
+		return histories, errors.Wrap(err, "[Data]GetTopUpHistory")
+	}
+
+	return histories, err
+}
+
+// search player
+func (d *PlayerData) SearchPlayer(ctx context.Context, filter e.PlayerFilterFeed) ([]e.PlayerDetail, error) {
+	var (
+		err     error
+		player  e.Player
+		players []e.PlayerDetail
+		scopes  []func(db *gorm.DB) *gorm.DB
+	)
+
+	if filter.PlayerId > 0 {
+		scopes = append(scopes, scopePlayerId(filter.PlayerId))
+	}
+
+	if filter.UsernameLike != "" {
+		scopes = append(scopes, scopeUsernameLike(filter.UsernameLike))
+	}
+
+	if !filter.JoinAfter.IsZero() {
+		scopes = append(scopes, scopeJoinAfter(filter.JoinAfter))
+	}
+
+	if !filter.JoinBefore.IsZero() {
+		scopes = append(scopes, scopeJoinBefore(filter.JoinBefore))
+	}
+
+	if filter.MinInGameCurrency > 0 {
+		scopes = append(scopes, scopeMinInGameCurrency(filter.MinInGameCurrency))
+	}
+
+	if filter.MaxInGameCurrency > 0 {
+		scopes = append(scopes, scopeMaxInGameCurrency(filter.MaxInGameCurrency))
+	}
+
+	if filter.BankName != "" {
+		scopes = append(scopes, scopeBankNameLike(filter.BankName))
+	}
+
+	if filter.BankAccountName != "" {
+		scopes = append(scopes, scopeBankAccountNameLike(filter.BankAccountName))
+	}
+
+	if filter.BankAccountNumber > 0 {
+		scopes = append(scopes, scopeBankAccuntNumberLike(filter.BankAccountNumber))
+	}
+
+	result := d.DB.Model(&player).Scopes(scopes...).Find(&players)
+	if result.Error != nil {
+		return players, errors.Wrap(err, "[Data]SearchPlayer")
+	}
+
+	return players, err
 }
 
 // username exist in db

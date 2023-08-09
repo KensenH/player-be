@@ -29,7 +29,10 @@ type PlayerData interface {
 
 	GetPlayerDetail(ctx context.Context, playerId uint) (e.PlayerDetail, error)
 
+	SearchPlayer(ctx context.Context, filter e.PlayerFilterFeed) ([]e.PlayerDetail, error)
+
 	AddBankAccount(ctx context.Context, bankAcc e.BankAccount) error
+	GetTopUpHistory(ctx context.Context, playerId uint) ([]e.TopUpHistory, error)
 	AddInGameCurrency(ctx context.Context, playerId uint, sum int64) error
 	InputTopUpHistory(ctx context.Context, topUp *e.TopUpHistory) error
 }

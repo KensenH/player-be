@@ -24,9 +24,16 @@ type PlayerHandler interface {
 	SignUp(c echo.Context) error
 	SignIn(c echo.Context) error
 	SignOut(c echo.Context) error
+
 	GetPlayerDetail(c echo.Context) error
+	GetProfile(c echo.Context) error
+
+	Receipts(c echo.Context) error
 	AddBankAccount(c echo.Context) error
 	TopUp(c echo.Context) error
+
+	SearchPlayer(c echo.Context) error
+
 	JwtMiddleware(next echo.HandlerFunc) echo.HandlerFunc
 }
 
