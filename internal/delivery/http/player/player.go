@@ -11,7 +11,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-// get player detail
+// get player detail,
+// /api/v1/player/detail/:id
 func (h PlayerHandler) GetPlayerDetail(c echo.Context) error {
 	var (
 		err    error
@@ -36,7 +37,8 @@ func (h PlayerHandler) GetPlayerDetail(c echo.Context) error {
 	return c.JSON(200, player)
 }
 
-// get player's profile
+// get player's profile,
+// /api/v1/player/profile
 func (h PlayerHandler) GetProfile(c echo.Context) error {
 	var (
 		err      error
@@ -55,7 +57,8 @@ func (h PlayerHandler) GetProfile(c echo.Context) error {
 	return c.JSON(200, player)
 }
 
-// add or update player's bank account
+// add or update player's bank account,
+// /api/v1/player/addbankaccount
 func (h PlayerHandler) AddBankAccount(c echo.Context) error {
 	var (
 		err      error
@@ -88,6 +91,7 @@ func (h PlayerHandler) AddBankAccount(c echo.Context) error {
 }
 
 // top up / buy ingame currency
+// /api/v1/player/topup
 func (h PlayerHandler) TopUp(c echo.Context) error {
 	var (
 		err      error
@@ -110,7 +114,8 @@ func (h PlayerHandler) TopUp(c echo.Context) error {
 	})
 }
 
-// search player
+// search player,
+// /api/v1/player/search?
 func (h PlayerHandler) SearchPlayer(c echo.Context) error {
 	var (
 		err     error
@@ -138,6 +143,7 @@ func (h PlayerHandler) SearchPlayer(c echo.Context) error {
 }
 
 // show player's topup histories
+// /api/v1/player/receipts
 func (h PlayerHandler) Receipts(c echo.Context) error {
 	var (
 		err       error

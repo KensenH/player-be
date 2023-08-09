@@ -8,6 +8,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// search player
 func (s *PlayerService) SearchPlayer(ctx context.Context, filter e.PlayerFilter) ([]e.PlayerDetail, error) {
 	var (
 		err            error

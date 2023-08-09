@@ -106,7 +106,7 @@ func (d *PlayerData) SubInGameCurrency(ctx context.Context, playerId uint, sum i
 	return err
 }
 
-// input transaction to history
+// input receipt to db
 func (d *PlayerData) InputTopUpHistory(ctx context.Context, topUp *e.TopUpHistory) error {
 	result := d.DB.Create(&topUp)
 	if result.Error != nil {
@@ -116,6 +116,7 @@ func (d *PlayerData) InputTopUpHistory(ctx context.Context, topUp *e.TopUpHistor
 	return nil
 }
 
+// get top up histories by player id
 func (d *PlayerData) GetTopUpHistory(ctx context.Context, playerId uint) ([]e.TopUpHistory, error) {
 	var (
 		err       error
